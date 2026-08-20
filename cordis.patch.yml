@@ -1,0 +1,6 @@
+- insert:
+    - id: companion
+      name: dsh-companion
+      config:
+        successHoldMs: 5000
+        errorHoldMs: 10000
