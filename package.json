@@ -1,6 +1,6 @@
 {
   "name": "dsh-companion",
-  "version": "0.1.0",
+  "version": "0.1.9",
   "description": "A local, state-aware desktop companion overlay for DeepSeek Harness",
   "type": "module",
   "main": "./lib/index.js",
@@ -21,6 +21,8 @@
     "./package.json": "./package.json"
   },
   "files": [
+    "assets/suave-whale-boy/README.md",
+    "assets/suave-whale-boy/suave-whale-boy-idle.webp",
     "cordis.patch.yml",
     "lib",
     "README.md",

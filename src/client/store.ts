@@ -1,20 +1,28 @@
 import { defineStore, type EngineStoreHandle } from '@deepseek-ai/dsh-client-runtime/client'
+import { DEFAULT_ACCENT_COLOR, normalizeAccentColor } from './derive.ts'
+import {
+  DIALOGUE_GROUPS,
+  normalizeDialogueLines,
+  type DialoguePreferences,
+} from './dialogue.ts'
 
 export interface CompanionPreferences {
   position: { x: number; y: number } | null
   size: number
+  accentColor?: string
   showBubble: boolean
   showMetrics: boolean
-  motion: boolean
+  dialogueLines?: DialoguePreferences
 }
 
 type CompanionActions = {
   setPosition: (draft: CompanionPreferences, x: number, y: number) => void
   resetPosition: (draft: CompanionPreferences) => void
   setSize: (draft: CompanionPreferences, size: number) => void
+  setAccentColor: (draft: CompanionPreferences, value: string) => void
   setShowBubble: (draft: CompanionPreferences, value: boolean) => void
   setShowMetrics: (draft: CompanionPreferences, value: boolean) => void
-  setMotion: (draft: CompanionPreferences, value: boolean) => void
+  setDialogueLines: (draft: CompanionPreferences, value: DialoguePreferences | null) => void
 }
 
 export const MIN_SIZE = 80
@@ -29,9 +37,9 @@ export function createCompanionStore(): EngineStoreHandle<CompanionPreferences, 
     init: (): CompanionPreferences => ({
       position: null,
       size: 104,
+      accentColor: DEFAULT_ACCENT_COLOR,
       showBubble: true,
       showMetrics: true,
-      motion: true,
     }),
     persist: 'dsh.companion.preferences.v1',
     actions: {
@@ -40,9 +48,22 @@ export function createCompanionStore(): EngineStoreHandle<CompanionPreferences, 
       },
       resetPosition: (draft) => { draft.position = null },
       setSize: (draft, size: number) => { draft.size = clampSize(size) },
+      setAccentColor: (draft, value: string) => { draft.accentColor = normalizeAccentColor(value) },
       setShowBubble: (draft, value: boolean) => { draft.showBubble = value },
       setShowMetrics: (draft, value: boolean) => { draft.showMetrics = value },
-      setMotion: (draft, value: boolean) => { draft.motion = value },
+      setDialogueLines: (draft, value) => {
+        if (value === null) {
+          delete draft.dialogueLines
+          return
+        }
+        const next: DialoguePreferences = {}
+        for (const group of DIALOGUE_GROUPS) {
+          const lines = normalizeDialogueLines(value[group])
+          if (lines !== null) next[group] = lines
+        }
+        if (Object.keys(next).length === 0) delete draft.dialogueLines
+        else draft.dialogueLines = next
+      },
     },
   })
 }

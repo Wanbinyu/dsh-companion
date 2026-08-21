@@ -10,6 +10,44 @@ export interface BillingMetrics {
   currency: string
   totalCost: number
   totalTokens: number
+  unpricedModelCount: number
+  latestTurn?: {
+    cost: number
+    totalTokens: number
+  }
+  quota?: {
+    percent: number
+    estimated: boolean
+  }
+}
+
+export interface CompanionPosition {
+  x: number
+  y: number
+}
+
+export const DEFAULT_ACCENT_COLOR = '#4bc5e7'
+export const LONG_TASK_THRESHOLD_MS = 10 * 60 * 1000
+
+export function normalizeAccentColor(value: unknown): string {
+  return typeof value === 'string' && /^#[0-9a-f]{6}$/i.test(value)
+    ? value.toLowerCase()
+    : DEFAULT_ACCENT_COLOR
+}
+
+export function clampPosition(
+  x: number,
+  y: number,
+  containerWidth: number,
+  containerHeight: number,
+  size: number,
+): CompanionPosition {
+  const maxX = Math.max(0, containerWidth - size)
+  const maxY = Math.max(0, containerHeight - size)
+  return {
+    x: Math.min(maxX, Math.max(0, x)),
+    y: Math.min(maxY, Math.max(0, y)),
+  }
 }
 
 export function resolveActivity(summary: SessionSummaryLike | undefined, now: number): CompanionActivity {
@@ -31,23 +69,75 @@ export function readBillingMetrics(value: unknown): BillingMetrics | undefined {
   if (typeof value !== 'object' || value === null) return undefined
   const billing = value as Record<string, unknown>
   if (typeof billing.currency !== 'string' || billing.currency.length !== 3) return undefined
-  if (typeof billing.totalCost !== 'number' || !Number.isFinite(billing.totalCost)) return undefined
+  if (typeof billing.totalCost !== 'number' || !Number.isFinite(billing.totalCost) || billing.totalCost < 0) {
+    return undefined
+  }
   if (!Array.isArray(billing.models)) return undefined
+
+  const tokenTotal = (row: Record<string, unknown>): number => {
+    let total = 0
+    for (const key of ['uncachedInputTokens', 'outputTokens', 'cacheReadTokens', 'cacheWriteTokens']) {
+      const count = row[key]
+      if (typeof count === 'number' && Number.isFinite(count) && count > 0) total += count
+    }
+    return total
+  }
 
   let totalTokens = 0
   for (const row of billing.models) {
     if (typeof row !== 'object' || row === null) continue
-    const model = row as Record<string, unknown>
-    for (const key of ['uncachedInputTokens', 'outputTokens', 'cacheReadTokens', 'cacheWriteTokens']) {
-      const count = model[key]
-      if (typeof count === 'number' && Number.isFinite(count) && count > 0) totalTokens += count
-    }
+    totalTokens += tokenTotal(row as Record<string, unknown>)
   }
-  return { currency: billing.currency, totalCost: billing.totalCost, totalTokens }
+
+  const latestRecord = typeof billing.latestTurn === 'object' && billing.latestTurn !== null
+    ? billing.latestTurn as Record<string, unknown>
+    : undefined
+  const latestTurn = latestRecord !== undefined
+    && typeof latestRecord.cost === 'number'
+    && Number.isFinite(latestRecord.cost)
+    && latestRecord.cost >= 0
+    ? { cost: latestRecord.cost, totalTokens: tokenTotal(latestRecord) }
+    : undefined
+
+  const quotaRecord = typeof billing.quota === 'object' && billing.quota !== null
+    ? billing.quota as Record<string, unknown>
+    : undefined
+  const quota = quotaRecord !== undefined
+    && typeof quotaRecord.percent === 'number'
+    && Number.isFinite(quotaRecord.percent)
+    ? {
+        percent: Math.min(1, Math.max(0, quotaRecord.percent)),
+        estimated: quotaRecord.estimated === true,
+      }
+    : undefined
+
+  const unpricedModelCount = Array.isArray(billing.unpricedModels)
+    ? billing.unpricedModels.filter(model => typeof model === 'string').length
+    : 0
+
+  return {
+    currency: billing.currency,
+    totalCost: billing.totalCost,
+    totalTokens,
+    unpricedModelCount,
+    ...(latestTurn === undefined ? {} : { latestTurn }),
+    ...(quota === undefined ? {} : { quota }),
+  }
 }
 
 export function elapsedMs(projection: CompanionProjection | undefined, running: boolean, now: number): number | undefined {
   if (projection === undefined) return undefined
   if (running && projection.startedAt !== undefined) return Math.max(0, now - projection.startedAt)
   return projection.durationMs
+}
+
+export function isLongTask(
+  running: boolean,
+  durationMs: number | undefined,
+  thresholdMs = LONG_TASK_THRESHOLD_MS,
+): boolean {
+  return running
+    && durationMs !== undefined
+    && Number.isFinite(durationMs)
+    && durationMs >= thresholdMs
 }

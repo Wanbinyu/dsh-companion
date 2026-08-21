@@ -1,6 +1,6 @@
 import { existsSync } from 'node:fs'
 import { readFile } from 'node:fs/promises'
-import { basename, dirname, resolve as resolvePath, sep } from 'node:path'
+import { basename, dirname, extname, resolve as resolvePath, sep } from 'node:path'
 import { transform } from 'lightningcss'
 import { defineConfig } from 'tsdown'
 
@@ -19,9 +19,17 @@ function sourceAssetPath(source: string, importer: string): string {
   if (existsSync(emitted)) return emitted
   const marker = `${sep}lib${sep}types${sep}`
   const boundary = emitted.indexOf(marker)
-  return boundary < 0
-    ? emitted
-    : resolvePath(emitted.slice(0, boundary), 'src', emitted.slice(boundary + marker.length))
+  if (boundary >= 0) {
+    return resolvePath(emitted.slice(0, boundary), 'src', emitted.slice(boundary + marker.length))
+  }
+  const importerBoundary = importer.indexOf(marker)
+  if (importerBoundary < 0) return emitted
+  const sourceImporter = resolvePath(
+    importer.slice(0, importerBoundary),
+    'src',
+    importer.slice(importerBoundary + marker.length),
+  )
+  return resolvePath(dirname(sourceImporter), source)
 }
 
 function createCssPlugin(pluginId: string) {
@@ -63,6 +71,23 @@ function createCssPlugin(pluginId: string) {
   }
 }
 
+function createDataUriPlugin() {
+  return {
+    name: 'dsh-webp-data-uri',
+    resolveId(source: string, importer?: string) {
+      if (extname(source) !== '.webp') return null
+      const absolute = importer === undefined ? source : sourceAssetPath(source, importer)
+      return absolute
+    },
+    async load(id: string) {
+      if (extname(id) !== '.webp') return null
+      this.addWatchFile(id)
+      const source = await readFile(id)
+      return `export default ${JSON.stringify(`data:image/webp;base64,${source.toString('base64')}`)};`
+    },
+  }
+}
+
 export default defineConfig({
   name: `${PLUGIN_ID}/client`,
   entry: { client: 'lib/types/client/index.js' },
@@ -80,7 +105,7 @@ export default defineConfig({
     'import.meta.env.MODE': JSON.stringify(process.env.NODE_ENV ?? 'production'),
     'import.meta.env': JSON.stringify({ MODE: process.env.NODE_ENV ?? 'production' }),
   },
-  plugins: [createCssPlugin(PLUGIN_ID)],
+  plugins: [createCssPlugin(PLUGIN_ID), createDataUriPlugin()],
   outputOptions: {
     entryFileNames: 'client.js',
     banner: `window.__ModuleLoader__.load({ id: ${JSON.stringify(PLUGIN_ID)}, factory: (require) => {`,

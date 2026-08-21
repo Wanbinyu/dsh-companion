@@ -1,0 +1,11 @@
+import type { CompanionActivity } from '../types.ts';
+export type DialogueGroup = 'working' | 'success' | 'idle';
+export declare const DIALOGUE_GROUPS: readonly DialogueGroup[];
+export declare const MAX_DIALOGUE_LINES = 12;
+export declare const MAX_DIALOGUE_LINE_LENGTH = 80;
+export type DialoguePreferences = Partial<Record<DialogueGroup, string[]>>;
+export declare function normalizeDialogueLines(value: unknown): string[] | null;
+export declare function parseDialogueText(value: string): string[] | null;
+export declare function sameDialogueLines(left: string[] | null, right: readonly string[]): boolean;
+export declare function pickDialogueLine(lines: readonly string[], seed: string): string | undefined;
+export declare function dialogueGroupForActivity(activity: CompanionActivity): DialogueGroup | undefined;

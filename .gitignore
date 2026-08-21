@@ -3,3 +3,9 @@ coverage/
 *.tgz
 *.log
 .DS_Store
+
+# Local character drafts and visual QA exports. The shipped runtime WebP is tracked.
+assets/blue-whale-boy/
+assets/blue-whale-boy-v2/
+assets/suave-whale-boy/*.png
+assets/suave-whale-boy/*-preview.jpg
