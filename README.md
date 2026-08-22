@@ -38,16 +38,16 @@
 
 ## 快速开始
 
-要求 Node.js `>=22.19` 和 DeepSeek Harness `0.1.0-rc.6` 或更高版本。项目使用当前固定的 `0.1.0-rc.8` 软件包完成验证。
+要求 Node.js `>=22.19`。兼容 DeepSeek Harness `0.1.0-rc.6` 至 `rc.8`，以及 `0.1.1-rc.1`、`rc.2`；项目使用当前固定的 `0.1.1-rc.2` 软件包完成验证。
 
 安装发布版并启动 Harness Web：
 
 ```bash
-dsh plugin --profile web add https://github.com/Wanbinyu/dsh-companion/releases/download/v0.1.9/dsh-companion-0.1.9.tgz
+dsh plugin --profile web add https://github.com/Wanbinyu/dsh-companion/releases/download/v0.1.10/dsh-companion-0.1.10.tgz
 dsh web
 ```
 
-[下载 v0.1.9 安装包](https://github.com/Wanbinyu/dsh-companion/releases/download/v0.1.9/dsh-companion-0.1.9.tgz) · [查看全部版本](https://github.com/Wanbinyu/dsh-companion/releases)
+[下载 v0.1.10 安装包](https://github.com/Wanbinyu/dsh-companion/releases/download/v0.1.10/dsh-companion-0.1.10.tgz) · [查看全部版本](https://github.com/Wanbinyu/dsh-companion/releases)
 
 卸载：
 
@@ -115,7 +115,7 @@ dsh plugin --profile web remove dsh-companion
 - 使用官方 Session Projection、Locale 和 Store API。
 - 浏览器包将 `@deepseek-ai/dsh-client-runtime/client` 保持为外部依赖，以兼容其 ModuleLoader 包装格式。
 - 中英文界面跟随 Harness 语言自动切换。
-- 支持 DeepSeek Harness `0.1.0-rc.6` 及以上版本，持续以 `rc.8` 依赖完成开发验证。
+- 支持 DeepSeek Harness `0.1.0-rc.6` 至 `rc.8` 及 `0.1.1-rc.1`、`rc.2`，持续以 `0.1.1-rc.2` 依赖完成开发验证。
 
 ## 隐私边界
 
@@ -155,7 +155,7 @@ dsh web
 ```powershell
 New-Item -ItemType Directory -Force G:\dsh-packages
 npm pack --pack-destination G:\dsh-packages
-dsh plugin --profile web add G:\dsh-packages\dsh-companion-0.1.9.tgz
+dsh plugin --profile web add G:\dsh-packages\dsh-companion-0.1.10.tgz
 ```
 
 项目结构：

@@ -1,4 +1,4 @@
-import { describe, expect, expectTypeOf, it } from 'vitest'
+import { describe, expect, expectTypeOf, it, vi } from 'vitest'
 import { Context } from '@deepseek-ai/cordis'
 import { CallId, createToolResultMessage } from '@deepseek-ai/dsh-llm'
 import SessionStore, { SessionId } from '@deepseek-ai/dsh-session'
@@ -58,6 +58,28 @@ describe('companion projection', () => {
     expect(projected(ctx, session).activeTool).toBeUndefined()
   })
 
+  it('does not refresh projection state for streamed assistant chunks', async () => {
+    vi.useFakeTimers()
+    try {
+      vi.setSystemTime(new Date('2026-08-22T00:00:00Z'))
+      const { ctx, session } = await harness()
+      session.append('turn/start', { turn: 1 })
+      session.append('step/start', { turn: 1, step: 1 })
+      const changedAt = projected(ctx, session).changedAt
+
+      vi.advanceTimersByTime(250)
+      session.append('assistant/chunk', {
+        turn: 1,
+        step: 1,
+        chunk: { type: 'text-delta', index: 0, text: 'streamed token' },
+      })
+
+      expect(projected(ctx, session).changedAt).toBe(changedAt)
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
   it('keeps tool state while another parallel call remains active', async () => {
     const { ctx, session } = await harness()
     session.append('turn/start', { turn: 1 })
@@ -85,6 +107,19 @@ describe('companion projection', () => {
     })
     expect(projected(ctx, session)).toMatchObject({ status: 'error', turn: 2, errorCode: 'RATE_LIMIT' })
     expect(projected(ctx, session)).not.toHaveProperty('message')
+  })
+
+  it('removes control characters and bounds terminal error codes', async () => {
+    const { ctx, session } = await harness()
+    session.append('turn/start', { turn: 1 })
+    session.append('turn/end', {
+      turn: 1,
+      reason: { kind: 'error', error: { code: ` BAD\n${'X'.repeat(200)} `, message: 'private detail' } },
+    })
+
+    const errorCode = projected(ctx, session).errorCode
+    expect(errorCode).toHaveLength(128)
+    expect(errorCode).not.toMatch(/[\u0000-\u001f\u007f-\u009f]/)
   })
 
   it('types the projection key through SessionProjectionMap', async () => {

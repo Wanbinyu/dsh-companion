@@ -185,7 +185,7 @@ export function Companion({ useSessions, useStore, actions, t }: CompanionProps)
 
   useEffect(() => {
     if (summary?.running === true) {
-      const interval = window.setInterval(() => { setNow(Date.now()) }, 500)
+      const interval = window.setInterval(() => { setNow(Date.now()) }, 1000)
       return () => { window.clearInterval(interval) }
     }
     if (projection?.status !== 'success' && projection?.status !== 'error') return

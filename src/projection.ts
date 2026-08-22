@@ -18,12 +18,42 @@ interface CompanionState {
   errorCode?: string
 }
 
+declare module '@deepseek-ai/dsh-session-projection/types' {
+  interface SessionProjectionStateMap {
+    companion: CompanionState
+  }
+}
+
+type CompanionProjectionDefinition =
+  Omit<ProjectionDefinition<'companion', CompanionState>, 'wire'> & {
+    wire: NonNullable<ProjectionDefinition<'companion', CompanionState>['wire']>
+    /** Compatibility fields used by the 0.1.0-rc.6 through rc.8 registry. */
+    schema: z.ZodType<CompanionProjection>
+    view(state: CompanionState): CompanionProjection
+  }
+
+const MAX_ERROR_CODE_LENGTH = 128
+
+function sameTools(left: readonly ActiveTool[], right: readonly ActiveTool[]): boolean {
+  return left.length === right.length
+    && left.every((tool, index) => tool.id === right[index]?.id && tool.name === right[index]?.name)
+}
+
+function normalizeErrorCode(value: string): string | undefined {
+  const normalized = value
+    .replace(/[\u0000-\u001f\u007f-\u009f]/g, '')
+    .trim()
+    .slice(0, MAX_ERROR_CODE_LENGTH)
+  return normalized.length === 0 ? undefined : normalized
+}
+
 function runningState(
   state: CompanionState,
   event: SessionEvent,
   status: 'thinking' | 'tool',
   activeTools: ActiveTool[] = state.activeTools,
 ): CompanionState {
+  if (state.status === status && sameTools(state.activeTools, activeTools)) return state
   return {
     status,
     ...(state.turn === undefined ? {} : { turn: state.turn }),
@@ -35,22 +65,44 @@ function runningState(
 
 export function companionProjectionDefinition(
   config: CompanionConfig,
-): ProjectionDefinition<'companion', CompanionState> {
-  const schema = z.object({
+): CompanionProjectionDefinition {
+  const stateSchema = z.object({
+    status: z.enum(['idle', 'thinking', 'tool', 'success', 'error']),
+    turn: z.number().int().positive().optional(),
+    activeTools: z.array(z.object({ id: z.string(), name: z.string() }).strict()),
+    startedAt: z.number().nonnegative().optional(),
+    changedAt: z.number().nonnegative(),
+    durationMs: z.number().nonnegative().optional(),
+    errorCode: z.string().max(MAX_ERROR_CODE_LENGTH).optional(),
+  }).strict() as z.ZodType<CompanionState>
+  const viewSchema = z.object({
     status: z.enum(['idle', 'thinking', 'tool', 'success', 'error']),
     turn: z.number().int().positive().optional(),
     activeTool: z.string().optional(),
     startedAt: z.number().nonnegative().optional(),
     changedAt: z.number().nonnegative(),
     durationMs: z.number().nonnegative().optional(),
-    errorCode: z.string().optional(),
+    errorCode: z.string().max(MAX_ERROR_CODE_LENGTH).optional(),
     successHoldMs: z.number().int().nonnegative(),
     errorHoldMs: z.number().int().nonnegative(),
   }).strict() as z.ZodType<CompanionProjection>
+  const view = (state: CompanionState): CompanionProjection => ({
+    status: state.status,
+    ...(state.turn === undefined ? {} : { turn: state.turn }),
+    ...(state.activeTools.length === 0
+      ? {}
+      : { activeTool: state.activeTools[state.activeTools.length - 1]!.name }),
+    ...(state.startedAt === undefined ? {} : { startedAt: state.startedAt }),
+    changedAt: state.changedAt,
+    ...(state.durationMs === undefined ? {} : { durationMs: state.durationMs }),
+    ...(state.errorCode === undefined ? {} : { errorCode: state.errorCode }),
+    successHoldMs: config.successHoldMs,
+    errorHoldMs: config.errorHoldMs,
+  })
 
   return {
     key: 'companion',
-    schema,
+    stateSchema,
     init: () => ({ status: 'idle', activeTools: [], changedAt: 0 }),
     apply: (state, event) => {
       if (event.type === 'turn/start') {
@@ -79,8 +131,7 @@ export function companionProjectionDefinition(
       }
 
       if (event.type === 'step/start' || event.type === 'assistant/chunk' || event.type === 'assistant/message') {
-        if (state.status === 'idle' || state.status === 'success' || state.status === 'error') return state
-        return runningState(state, event, state.activeTools.length > 0 ? 'tool' : 'thinking')
+        return state
       }
 
       if (event.type !== 'turn/end') return state
@@ -111,6 +162,9 @@ export function companionProjectionDefinition(
           ...(durationMs === undefined ? {} : { durationMs }),
         }
       }
+      const errorCode = event.data.reason.kind === 'error'
+        ? normalizeErrorCode(event.data.reason.error.code)
+        : undefined
       return {
         status: 'error',
         turn: event.data.turn,
@@ -118,22 +172,12 @@ export function companionProjectionDefinition(
         ...(state.startedAt === undefined ? {} : { startedAt: state.startedAt }),
         changedAt: event.time,
         ...(durationMs === undefined ? {} : { durationMs }),
-        ...(event.data.reason.kind === 'error' ? { errorCode: event.data.reason.error.code } : {}),
+        ...(errorCode === undefined ? {} : { errorCode }),
       }
     },
-    view: state => ({
-      status: state.status,
-      ...(state.turn === undefined ? {} : { turn: state.turn }),
-      ...(state.activeTools.length === 0
-        ? {}
-        : { activeTool: state.activeTools[state.activeTools.length - 1]!.name }),
-      ...(state.startedAt === undefined ? {} : { startedAt: state.startedAt }),
-      changedAt: state.changedAt,
-      ...(state.durationMs === undefined ? {} : { durationMs: state.durationMs }),
-      ...(state.errorCode === undefined ? {} : { errorCode: state.errorCode }),
-      successHoldMs: config.successHoldMs,
-      errorHoldMs: config.errorHoldMs,
-    }),
-    stateVersion: 1,
+    wire: { viewSchema, view },
+    schema: viewSchema,
+    view,
+    stateVersion: 2,
   }
 }

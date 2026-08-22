@@ -7,7 +7,7 @@ Build a small, local, state-aware companion overlay for DeepSeek Harness Web. It
 ## Compatibility
 
 - Keep peer dependency compatibility at DeepSeek Harness `0.1.0-rc.6` or newer.
-- Verify development against the current pinned `rc.8` packages.
+- Verify development against the current pinned `0.1.1-rc.2` packages.
 - Use the official `shell.overlay`, session projection, locale, and Store APIs.
 - Do not query or mutate Harness DOM outside the registered Slot component.
 - Keep `@deepseek-ai/dsh-client-runtime/client` external in the browser bundle because its published JS is a ModuleLoader wrapper.

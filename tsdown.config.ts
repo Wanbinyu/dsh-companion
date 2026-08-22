@@ -95,7 +95,7 @@ export default defineConfig({
   format: 'cjs',
   failOnWarn: false,
   platform: 'browser',
-  sourcemap: true,
+  sourcemap: false,
   dts: false,
   clean: false,
   external: CLIENT_EXTERNALS,

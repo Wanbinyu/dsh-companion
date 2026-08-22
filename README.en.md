@@ -38,16 +38,16 @@
 
 ## Quick Start
 
-Requires Node.js `>=22.19` and DeepSeek Harness `0.1.0-rc.6` or later. Development is verified against the currently pinned `0.1.0-rc.8` packages.
+Requires Node.js `>=22.19`. It supports DeepSeek Harness `0.1.0-rc.6` through `rc.8`, plus `0.1.1-rc.1` and `rc.2`; development is verified against the currently pinned `0.1.1-rc.2` packages.
 
 Install the release archive and start Harness Web:
 
 ```bash
-dsh plugin --profile web add https://github.com/Wanbinyu/dsh-companion/releases/download/v0.1.9/dsh-companion-0.1.9.tgz
+dsh plugin --profile web add https://github.com/Wanbinyu/dsh-companion/releases/download/v0.1.10/dsh-companion-0.1.10.tgz
 dsh web
 ```
 
-[Download v0.1.9](https://github.com/Wanbinyu/dsh-companion/releases/download/v0.1.9/dsh-companion-0.1.9.tgz) · [View all releases](https://github.com/Wanbinyu/dsh-companion/releases)
+[Download v0.1.10](https://github.com/Wanbinyu/dsh-companion/releases/download/v0.1.10/dsh-companion-0.1.10.tgz) · [View all releases](https://github.com/Wanbinyu/dsh-companion/releases)
 
 Uninstall:
 
@@ -115,7 +115,7 @@ Position, size, UI accent color, bubble, metrics, and custom dialogue lines are 
 - Uses the official Session Projection, Locale, and Store APIs.
 - Keeps `@deepseek-ai/dsh-client-runtime/client` external in the browser bundle for compatibility with its ModuleLoader wrapper.
 - Automatically follows the Harness language in Chinese and English.
-- Supports DeepSeek Harness `0.1.0-rc.6` and later, with ongoing development verification against the pinned `rc.8` packages.
+- Supports DeepSeek Harness `0.1.0-rc.6` through `rc.8`, plus `0.1.1-rc.1` and `rc.2`, with ongoing development verification against pinned `0.1.1-rc.2` packages.
 
 ## Privacy Boundary
 
@@ -155,7 +155,7 @@ On Windows, `dsh 0.1.0-rc.7` may split a local plugin path that contains spaces.
 ```powershell
 New-Item -ItemType Directory -Force G:\dsh-packages
 npm pack --pack-destination G:\dsh-packages
-dsh plugin --profile web add G:\dsh-packages\dsh-companion-0.1.9.tgz
+dsh plugin --profile web add G:\dsh-packages\dsh-companion-0.1.10.tgz
 ```
 
 Project structure:
