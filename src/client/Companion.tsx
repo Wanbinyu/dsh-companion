@@ -6,6 +6,7 @@ import {
   IconSettingsOutline16,
   Tooltip,
 } from '@deepseek-ai/dsh-client-ui-primitives'
+import type { SessionListState } from '@deepseek-ai/dsh-client-runtime/client'
 import type { PropsLocale, PropsRuntime, PropsStore } from '@deepseek-ai/dsh-client-ui-slots'
 import type { CompanionActivity, CompanionProjection } from '../types.ts'
 import {
@@ -30,7 +31,7 @@ import {
 } from './derive.ts'
 import { BLUE_WHALE_BOY_ASSETS } from './blueWhaleAssets.ts'
 import type { CompanionKey } from './locales.ts'
-import { MAX_SIZE, MIN_SIZE, createCompanionStore } from './store.ts'
+import { MAX_SIZE, MIN_SIZE, createCompanionStore, type CompanionPreferences } from './store.ts'
 import css from './Companion.module.css'
 
 export type CompanionProps =
@@ -130,11 +131,11 @@ function feedbackKey(activity: CompanionActivity): CompanionKey {
 }
 
 export function Companion({ useSessions, useStore, actions, t }: CompanionProps) {
-  const summary = useSessions((sessions) => {
+  const summary = useSessions((sessions: SessionListState) => {
     const id = sessions.current
     return id === undefined ? undefined : sessions.byId[id]
   })
-  const preferences = useStore(state => state)
+  const preferences = useStore((state: CompanionPreferences) => state)
   const projections = projectionRecord(summary?.projectionValues)
   const projection = projections?.companion as CompanionProjection | undefined
   const billing = readBillingMetrics(projections?.billing)

@@ -1,6 +1,6 @@
 import { describe, expect, expectTypeOf, it, vi } from 'vitest'
 import { Context } from '@deepseek-ai/cordis'
-import { CallId, createToolResultMessage } from '@deepseek-ai/dsh-llm'
+import { ToolCallId, createToolResultMessage } from '@deepseek-ai/dsh-llm'
 import SessionStore, { SessionId } from '@deepseek-ai/dsh-session'
 import type { Session } from '@deepseek-ai/dsh-session'
 import SessionProjectionRegistry from '@deepseek-ai/dsh-session-projection'
@@ -39,7 +39,7 @@ describe('companion projection', () => {
     session.append('tool/call', {
       turn: 1,
       step: 1,
-      callId: CallId('call-1'),
+      callId: ToolCallId('call-1'),
       name: 'terminal',
       arguments: '{}',
     })
@@ -49,7 +49,7 @@ describe('companion projection', () => {
       turn: 1,
       step: 1,
       message: createToolResultMessage({
-        callId: CallId('call-1'),
+        callId: ToolCallId('call-1'),
         content: [{ type: 'text', text: 'ok' }],
         isError: false,
       }),
@@ -84,12 +84,12 @@ describe('companion projection', () => {
     const { ctx, session } = await harness()
     session.append('turn/start', { turn: 1 })
     session.append('step/start', { turn: 1, step: 1 })
-    session.append('tool/call', { turn: 1, step: 1, callId: CallId('a'), name: 'read', arguments: '{}' })
-    session.append('tool/call', { turn: 1, step: 1, callId: CallId('b'), name: 'search', arguments: '{}' })
+    session.append('tool/call', { turn: 1, step: 1, callId: ToolCallId('a'), name: 'read', arguments: '{}' })
+    session.append('tool/call', { turn: 1, step: 1, callId: ToolCallId('b'), name: 'search', arguments: '{}' })
     session.append('tool/result', {
       turn: 1,
       step: 1,
-      message: createToolResultMessage({ callId: CallId('b'), content: [], isError: false }),
+      message: createToolResultMessage({ callId: ToolCallId('b'), content: [], isError: false }),
     }, { surfaceOp: 'append' })
     expect(projected(ctx, session)).toMatchObject({ status: 'tool', activeTool: 'read' })
   })

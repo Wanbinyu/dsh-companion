@@ -43,15 +43,15 @@ export function createCompanionStore(): EngineStoreHandle<CompanionPreferences, 
     }),
     persist: 'dsh.companion.preferences.v1',
     actions: {
-      setPosition: (draft, x: number, y: number) => {
+      setPosition: (draft: CompanionPreferences, x: number, y: number) => {
         draft.position = { x: Math.round(x), y: Math.round(y) }
       },
-      resetPosition: (draft) => { draft.position = null },
-      setSize: (draft, size: number) => { draft.size = clampSize(size) },
-      setAccentColor: (draft, value: string) => { draft.accentColor = normalizeAccentColor(value) },
-      setShowBubble: (draft, value: boolean) => { draft.showBubble = value },
-      setShowMetrics: (draft, value: boolean) => { draft.showMetrics = value },
-      setDialogueLines: (draft, value) => {
+      resetPosition: (draft: CompanionPreferences) => { draft.position = null },
+      setSize: (draft: CompanionPreferences, size: number) => { draft.size = clampSize(size) },
+      setAccentColor: (draft: CompanionPreferences, value: string) => { draft.accentColor = normalizeAccentColor(value) },
+      setShowBubble: (draft: CompanionPreferences, value: boolean) => { draft.showBubble = value },
+      setShowMetrics: (draft: CompanionPreferences, value: boolean) => { draft.showMetrics = value },
+      setDialogueLines: (draft: CompanionPreferences, value: DialoguePreferences | null) => {
         if (value === null) {
           delete draft.dialogueLines
           return
