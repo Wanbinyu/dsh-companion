@@ -1,6 +1,6 @@
 <h1 align="center">dsh-companion</h1>
 
-> **Unreleased source compatibility fix (2026-09-11)**: current source targets Harness `0.1.5-rc.2` and passes the `0.1.1-rc.2` baseline. Web clients no longer request the removed `@deepseek-ai/dsh-client-runtime/client` module. Companion bundles the standalone Store engine and supports the new pending-interaction hook; billing retains legacy streamed usage and modern final usage. No npm package, Release, or installer was published. Release links below still download older builds. For a `0.1.5` host, build this source with `npm ci && npm run verify`, then install a local `npm pack` archive. Source compatibility does not change existing release archives.
+> **v0.1.12 compatibility update**: verified against Harness `0.1.5-rc.2` and the `0.1.1-rc.2` baseline. Web plugins no longer request the retired runtime module. Download links below target the fixed archive; other host versions require verification.
 
 
 <p align="center">
@@ -46,11 +46,11 @@ Requires Node.js `>=22.19`. It supports DeepSeek Harness `0.1.0-rc.6` through `r
 Install the release archive and start Harness Web:
 
 ```bash
-dsh plugin --profile web add https://github.com/Wanbinyu/dsh-companion/releases/download/v0.1.11/dsh-companion-0.1.11.tgz
+dsh plugin --profile web add https://github.com/Wanbinyu/dsh-companion/releases/download/v0.1.12/dsh-companion-0.1.12.tgz
 dsh web
 ```
 
-[Download v0.1.11](https://github.com/Wanbinyu/dsh-companion/releases/download/v0.1.11/dsh-companion-0.1.11.tgz) · [View all releases](https://github.com/Wanbinyu/dsh-companion/releases)
+[Download v0.1.12](https://github.com/Wanbinyu/dsh-companion/releases/download/v0.1.12/dsh-companion-0.1.12.tgz) · [View all releases](https://github.com/Wanbinyu/dsh-companion/releases)
 
 Uninstall:
 
@@ -169,7 +169,7 @@ On Windows, `dsh 0.1.0-rc.7` may split a local plugin path that contains spaces.
 ```powershell
 New-Item -ItemType Directory -Force G:\dsh-packages
 npm pack --pack-destination G:\dsh-packages
-dsh plugin --profile web add G:\dsh-packages\dsh-companion-0.1.11.tgz
+dsh plugin --profile web add G:\dsh-packages\dsh-companion-0.1.12.tgz
 ```
 
 Project structure:

@@ -1,6 +1,6 @@
 <h1 align="center">dsh-companion</h1>
 
-> **源码兼容性修复（2026-09-11，尚未发布）**：当前源码已适配 Harness `0.1.5-rc.2`，并通过 `0.1.1-rc.2` 基线回归。Web 插件不再请求已移除的 `@deepseek-ai/dsh-client-runtime/client`；Companion 改用独立 Store 引擎，并兼容新版等待交互状态；计费投影兼容新版最终用量事件。本次没有发布 npm 包、Release 或新安装包。下面的 Release 下载链接仍是旧构建，不能用于验证新版宿主修复；使用 `0.1.5` 时请从当前源码执行 `npm ci && npm run verify`，再本地 `npm pack` 后安装。不要把源码兼容性当成旧下载包的兼容性。
+> **v0.1.12 兼容性修复**：适配 Harness `0.1.5-rc.2`，并通过 `0.1.1-rc.2` 回归。修复旧 runtime 模块缺失问题；下方下载链接指向本次修复包。其他宿主版本请先验证兼容性。
 
 
 <p align="center">
@@ -46,11 +46,11 @@
 安装发布版并启动 Harness Web：
 
 ```bash
-dsh plugin --profile web add https://github.com/Wanbinyu/dsh-companion/releases/download/v0.1.11/dsh-companion-0.1.11.tgz
+dsh plugin --profile web add https://github.com/Wanbinyu/dsh-companion/releases/download/v0.1.12/dsh-companion-0.1.12.tgz
 dsh web
 ```
 
-[下载 v0.1.11 安装包](https://github.com/Wanbinyu/dsh-companion/releases/download/v0.1.11/dsh-companion-0.1.11.tgz) · [查看全部版本](https://github.com/Wanbinyu/dsh-companion/releases)
+[下载 v0.1.12 安装包](https://github.com/Wanbinyu/dsh-companion/releases/download/v0.1.12/dsh-companion-0.1.12.tgz) · [查看全部版本](https://github.com/Wanbinyu/dsh-companion/releases)
 
 卸载：
 
@@ -169,7 +169,7 @@ dsh web
 ```powershell
 New-Item -ItemType Directory -Force G:\dsh-packages
 npm pack --pack-destination G:\dsh-packages
-dsh plugin --profile web add G:\dsh-packages\dsh-companion-0.1.11.tgz
+dsh plugin --profile web add G:\dsh-packages\dsh-companion-0.1.12.tgz
 ```
 
 项目结构：
