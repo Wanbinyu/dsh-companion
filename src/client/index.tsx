@@ -1,4 +1,7 @@
-import type { ClientContext } from '@deepseek-ai/dsh-client-runtime/client'
+import type { Context as ClientContext } from '@deepseek-ai/cordis'
+import type { StoreFactory } from '@deepseek-ai/dsh-client-ui-slots'
+import type {} from '@deepseek-ai/dsh-client-ui-renderer/client'
+import type {} from '@deepseek-ai/dsh-client-ui-session/client'
 import type {} from '@deepseek-ai/dsh-client-locale/client'
 import type {} from '@deepseek-ai/dsh-client-ui-layout/client'
 import type {} from '../client.ts'
@@ -21,6 +24,8 @@ export function apply(ctx: ClientContext): void {
     id: 'companion',
     order: 40,
     locale: NS,
-    store: createCompanionStore,
+    // Legacy Slots' generic action table uses unknown[]; the concrete engine
+    // has the same spec/create/subscribe contract on both host generations.
+    store: createCompanionStore as typeof createCompanionStore & StoreFactory,
   }, Companion))
 }

@@ -130,10 +130,6 @@ export function companionProjectionDefinition(
         return runningState(state, event, activeTools.length > 0 ? 'tool' : 'thinking', activeTools)
       }
 
-      if (event.type === 'step/start' || event.type === 'assistant/chunk' || event.type === 'assistant/message') {
-        return state
-      }
-
       if (event.type !== 'turn/end') return state
 
       const durationMs = state.startedAt === undefined

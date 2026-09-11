@@ -4,7 +4,6 @@ import { act, create, type ReactTestRenderer } from 'react-test-renderer'
 import { Companion, type CompanionProps } from '../src/client/Companion.tsx'
 import type { CompanionProjection } from '../src/types.ts'
 
-vi.mock('@deepseek-ai/dsh-client-runtime/client', () => ({ defineStore: vi.fn() }))
 vi.mock('@deepseek-ai/dsh-client-ui-primitives', () => ({
   IconCheckOutline16: () => null,
   IconCloseOutline16: () => null,
@@ -88,6 +87,18 @@ describe('companion lifecycle', () => {
     expect(activity()).toBe('success')
     act(() => { vi.advanceTimersByTime(5_010) })
     expect(activity()).toBe('idle')
+  })
+
+  it('reads waiting status from the modern pending-interaction hook', () => {
+    const modern = {
+      ...props,
+      useSessions: () => ({ id: 'session-1', running: true, projectionValues: {} }),
+      useSessionPendingInteraction: (select: (value: Map<string, { kind: string }>) => unknown) =>
+        select(new Map([['session-1', { kind: 'approval' }]])),
+    } as unknown as CompanionProps
+    act(() => { renderer = create(<Companion {...modern} />) })
+    expect(activity()).toBe('waiting')
+    expect(JSON.stringify(renderer!.toJSON())).toContain('waiting.approval')
   })
 
   it('uses the new session clock immediately when a run starts', () => {

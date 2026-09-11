@@ -1,4 +1,4 @@
-import { type EngineStoreHandle } from '@deepseek-ai/dsh-client-runtime/client';
+import { type EngineStoreHandle } from '@deepseek-ai/dsh-client-store';
 import { type DialoguePreferences } from './dialogue.ts';
 export interface CompanionPreferences {
     position: {

@@ -6,7 +6,7 @@ import {
   IconSettingsOutline16,
   Tooltip,
 } from '@deepseek-ai/dsh-client-ui-primitives'
-import type { SessionListState } from '@deepseek-ai/dsh-client-runtime/client'
+import type { SessionListState } from '@deepseek-ai/dsh-api-session-controller/client'
 import type { PropsLocale, PropsRuntime, PropsStore } from '@deepseek-ai/dsh-client-ui-slots'
 import type { CompanionActivity, CompanionProjection } from '../types.ts'
 import {
@@ -126,12 +126,17 @@ function feedbackKey(activity: CompanionActivity): CompanionKey {
   return `feedback.${activity}`
 }
 
-export function Companion({ useSessions, useStore, actions, t }: CompanionProps) {
+export function Companion({ useSessions, useSessionPendingInteraction, useStore, actions, t }: CompanionProps) {
   const summary = useSessions((sessions: SessionListState) => {
     const id = sessions.current
     return id === undefined ? undefined : sessions.byId[id]
   })
   const preferences = useStore((state: CompanionPreferences) => state)
+  // New Harness exposes pending UI interactions separately from list summaries.
+  // The hook is absent on the supported legacy host, whose summary carries it.
+  const pendingInteraction = useSessionPendingInteraction?.(interactions =>
+    summary === undefined ? undefined : interactions.get(summary.id)?.kind)
+    ?? (summary as { pendingInteraction?: string } | undefined)?.pendingInteraction
   const projections = projectionRecord(summary?.projectionValues)
   const projection = projections?.companion as CompanionProjection | undefined
   const billing = readBillingMetrics(projections?.billing)
@@ -164,7 +169,7 @@ export function Companion({ useSessions, useStore, actions, t }: CompanionProps)
 
   const activity = resolveActivity({
     running: summary?.running ?? false,
-    ...(summary?.pendingInteraction === undefined ? {} : { pendingInteraction: summary.pendingInteraction }),
+    ...(pendingInteraction === undefined ? {} : { pendingInteraction }),
     ...(projection === undefined ? {} : { projection }),
   }, now)
   const duration = elapsedMs(projection, summary?.running ?? false, now)
@@ -255,7 +260,7 @@ export function Companion({ useSessions, useStore, actions, t }: CompanionProps)
   if (activity === 'tool' && projection?.activeTool !== undefined) {
     details.push(t('tool', { tool: projection.activeTool }))
   } else if (activity === 'waiting') {
-    details.push(t(waitingKey(summary?.pendingInteraction)))
+    details.push(t(waitingKey(pendingInteraction)))
   } else if (activity === 'error' && projection?.errorCode !== undefined) {
     details.push(t('errorCode', { code: projection.errorCode }))
   } else if (projection?.turn !== undefined && (activity === 'thinking' || activity === 'success')) {
