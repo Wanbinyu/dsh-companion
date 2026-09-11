@@ -11,6 +11,10 @@ permissions:
 jobs:
   verify:
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        harness: [pinned, baseline]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -18,4 +22,6 @@ jobs:
           node-version: 22.19.0
           cache: npm
       - run: npm ci
+      - if: matrix.harness == 'baseline'
+        run: npm run install:baseline
       - run: npm run verify

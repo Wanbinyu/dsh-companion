@@ -1,11 +1,14 @@
 import { describe, expect, expectTypeOf, it, vi } from 'vitest'
 import { Context } from '@deepseek-ai/cordis'
-import { ToolCallId, createToolResultMessage } from '@deepseek-ai/dsh-llm'
+import { createToolResultMessage } from '@deepseek-ai/dsh-llm'
 import SessionStore, { SessionId } from '@deepseek-ai/dsh-session'
 import type { Session } from '@deepseek-ai/dsh-session'
 import SessionProjectionRegistry from '@deepseek-ai/dsh-session-projection'
 import type { CompanionProjection } from '../src/types.ts'
 import { companionProjectionDefinition } from '../src/projection.ts'
+
+// The branded ID factory was renamed between supported Harness versions.
+const ToolCallId = (value: string) => value as Parameters<typeof createToolResultMessage>[0]['callId']
 
 async function harness(): Promise<{ ctx: Context; session: Session }> {
   const ctx = new Context()

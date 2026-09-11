@@ -1,3 +1,9 @@
+.container {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
 .root {
   --pet-size: 104px;
   --pet-user-accent: #4bc5e7;

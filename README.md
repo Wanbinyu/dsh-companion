@@ -140,7 +140,18 @@ npm install
 npm run verify
 ```
 
-`verify` 会执行 Host/Web 类型检查、状态投影与客户端派生测试、浏览器模块构建和安装包内容检查。
+`verify` 会执行 Host/Web 类型检查、状态投影、客户端派生与组件生命周期测试、浏览器模块构建和安装包内容检查。内容检查使用 dry run，不生成安装包。
+
+CI 同时验证锁定依赖和 `0.1.1-rc.2` 兼容性基线。本地复现基线验证：
+
+```bash
+npm run install:baseline
+npm run verify
+npm ci
+npm run build
+```
+
+基线安装只替换 `node_modules`，不改动依赖清单或锁文件；后两步恢复锁定依赖及其构建产物。浮层尺寸与样式由注册组件自身管理，不查询宿主 DOM，也不向 `document.head` 注入样式。
 
 本地安装开发版：
 

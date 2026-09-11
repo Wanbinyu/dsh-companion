@@ -1,6 +1,6 @@
 import { existsSync } from 'node:fs'
 import { readFile } from 'node:fs/promises'
-import { basename, dirname, extname, resolve as resolvePath, sep } from 'node:path'
+import { dirname, extname, resolve as resolvePath, sep } from 'node:path'
 import { transform } from 'lightningcss'
 import { defineConfig } from 'tsdown'
 
@@ -56,15 +56,7 @@ function createCssPlugin(pluginId: string) {
         classMap[local] = value.name
       }
       return [
-        `const css = ${JSON.stringify(code.toString())};`,
-        `const tagId = ${JSON.stringify(`${pluginId}/${basename(file)}`)};`,
-        "if (typeof document !== 'undefined' && document.querySelector('style[data-plugin-css=' + JSON.stringify(tagId) + ']') === null) {",
-        "  const tag = document.createElement('style');",
-        `  tag.dataset.plugin = ${JSON.stringify(pluginId)};`,
-        '  tag.dataset.pluginCss = tagId;',
-        '  tag.textContent = css;',
-        '  document.head.appendChild(tag);',
-        '}',
+        `export const stylesheet = ${JSON.stringify(code.toString())};`,
         `export default ${JSON.stringify(classMap)};`,
       ].join('\n')
     },

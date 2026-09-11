@@ -140,7 +140,18 @@ npm install
 npm run verify
 ```
 
-`verify` runs Host/Web type checks, projection and client derivation tests, the browser module build, and a package-content check.
+`verify` runs Host/Web type checks, projection, client derivation and component lifecycle tests, the browser module build, and a package-content check. The package check uses a dry run and creates no archive.
+
+CI verifies both the locked dependencies and the `0.1.1-rc.2` compatibility baseline. To reproduce the baseline check locally:
+
+```bash
+npm run install:baseline
+npm run verify
+npm ci
+npm run build
+```
+
+The baseline installation changes only `node_modules`, leaving the manifest and lockfile intact; the last two commands restore the locked dependencies and their build output. The registered component owns its sizing container and stylesheet, without querying host DOM or injecting styles into `document.head`.
 
 Install a local development build:
 

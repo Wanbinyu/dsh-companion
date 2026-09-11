@@ -32,7 +32,7 @@ import {
 import { BLUE_WHALE_BOY_ASSETS } from './blueWhaleAssets.ts'
 import type { CompanionKey } from './locales.ts'
 import { MAX_SIZE, MIN_SIZE, createCompanionStore, type CompanionPreferences } from './store.ts'
-import css from './Companion.module.css'
+import css, { stylesheet } from './Companion.module.css'
 
 export type CompanionProps =
   & PropsRuntime<'shell.overlay'>
@@ -96,10 +96,6 @@ function projectionRecord(value: unknown): Record<string, unknown> | undefined {
   return typeof value === 'object' && value !== null ? value as Record<string, unknown> : undefined
 }
 
-function overlayContainer(root: HTMLElement): HTMLElement | null {
-  return root.closest<HTMLElement>('[data-shell-overlay]')
-}
-
 function formatDuration(ms: number): string {
   const totalSeconds = Math.max(0, Math.round(ms / 1000))
   const minutes = Math.floor(totalSeconds / 60)
@@ -139,7 +135,10 @@ export function Companion({ useSessions, useStore, actions, t }: CompanionProps)
   const projections = projectionRecord(summary?.projectionValues)
   const projection = projections?.companion as CompanionProjection | undefined
   const billing = readBillingMetrics(projections?.billing)
-  const [now, setNow] = useState(() => Date.now())
+  const [, setNow] = useState(() => Date.now())
+  // Timers request renders; every render must use the current time, including
+  // session switches after the terminal-state timer has already expired.
+  const now = Date.now()
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [settingsTab, setSettingsTab] = useState<SettingsTab>('status')
   const [sleepReady, setSleepReady] = useState(false)
@@ -157,6 +156,7 @@ export function Companion({ useSessions, useStore, actions, t }: CompanionProps)
   const [dialogueNotice, setDialogueNotice] = useState<DialogueNotice | null>(null)
   const [draftPosition, setDraftPosition] = useState<{ x: number; y: number } | null>(null)
   const rootRef = useRef<HTMLElement | null>(null)
+  const containerRef = useRef<HTMLDivElement | null>(null)
   const dragRef = useRef<DragState | null>(null)
   const feedbackTimerRef = useRef<number | null>(null)
   const interactionTimerRef = useRef<number | null>(null)
@@ -230,7 +230,7 @@ export function Companion({ useSessions, useStore, actions, t }: CompanionProps)
     const clamp = () => {
       const root = rootRef.current
       if (root === null) return
-      const parent = overlayContainer(root)
+      const parent = containerRef.current
       if (parent === null) return
       const { x, y } = clampPosition(
         preferences.position?.x ?? 0,
@@ -242,8 +242,13 @@ export function Companion({ useSessions, useStore, actions, t }: CompanionProps)
       if (x !== preferences.position?.x || y !== preferences.position?.y) actions.setPosition(x, y)
     }
     window.addEventListener('resize', clamp)
+    const observer = new ResizeObserver(clamp)
+    if (containerRef.current !== null) observer.observe(containerRef.current)
     clamp()
-    return () => { window.removeEventListener('resize', clamp) }
+    return () => {
+      window.removeEventListener('resize', clamp)
+      observer.disconnect()
+    }
   }, [actions, preferences.position?.x, preferences.position?.y, preferences.size])
 
   const details: string[] = []
@@ -381,7 +386,7 @@ export function Companion({ useSessions, useStore, actions, t }: CompanionProps)
   const onPointerDown = (event: React.PointerEvent<HTMLButtonElement>) => {
     if (event.button !== 0) return
     const root = rootRef.current
-    const parent = root === null ? null : overlayContainer(root)
+    const parent = containerRef.current
     if (root === null || root === undefined || parent === null || parent === undefined) return
     const rootRect = root.getBoundingClientRect()
     const parentRect = parent.getBoundingClientRect()
@@ -401,8 +406,7 @@ export function Companion({ useSessions, useStore, actions, t }: CompanionProps)
 
   const onPointerMove = (event: React.PointerEvent<HTMLButtonElement>) => {
     const drag = dragRef.current
-    const root = rootRef.current
-    const parent = root === null ? null : overlayContainer(root)
+    const parent = containerRef.current
     if (drag === null || drag.pointerId !== event.pointerId || parent === null || parent === undefined) return
     const dx = event.clientX - drag.startX
     const dy = event.clientY - drag.startY
@@ -450,7 +454,7 @@ export function Companion({ useSessions, useStore, actions, t }: CompanionProps)
     const offset = offsets[event.key]
     if (offset === undefined) return
     const root = rootRef.current
-    const parent = root === null ? null : overlayContainer(root)
+    const parent = containerRef.current
     if (root === null || parent === null) return
     event.preventDefault()
     const rootRect = root.getBoundingClientRect()
@@ -483,6 +487,8 @@ export function Companion({ useSessions, useStore, actions, t }: CompanionProps)
   const settingsAlign = (position?.x ?? Number.POSITIVE_INFINITY) < 250 ? 'left' : 'right'
 
   return (
+    <div ref={containerRef} className={css.container}>
+    <style>{stylesheet}</style>
     <aside
       ref={rootRef}
       className={css.root}
@@ -673,5 +679,6 @@ export function Companion({ useSessions, useStore, actions, t }: CompanionProps)
         </section>
       ) : null}
     </aside>
+    </div>
   )
 }
